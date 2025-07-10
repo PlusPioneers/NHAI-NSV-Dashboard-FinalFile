@@ -1073,6 +1073,14 @@ function initializeEventHandlers() {
             }
         });
     }
+    document.addEventListener('submit', function(e) {
+    // Check if it's a video upload form
+    if (e.target.closest('#videoUploadArea') || 
+        e.target.querySelector('#video-file-input')) {
+        e.preventDefault();
+        console.log('Form submission prevented to avoid page refresh');
+    }
+});
 }
 
 /**
@@ -1153,42 +1161,64 @@ let autoNavigateEnabled = true;
 // Video upload functionality
 const videoFileInput = document.getElementById('video-file-input');
 if (videoFileInput) {
-    videoFileInput.addEventListener('change', handleVideoUpload);
+    videoFileInput.addEventListener('change', function(event) {
+        event.preventDefault();
+        handleVideoUpload(event);
+    });
 }
 
+// REPLACE the existing handleVideoUpload function (around line 1020) with this:
 function handleVideoUpload(event) {
+    // CRITICAL: Prevent form submission and page refresh
+    event.preventDefault();
+    
     const file = event.target.files[0];
-    if (file) {
-        const formData = new FormData();
-        formData.append('file', file);
-        
-        // Show loading state
-        document.getElementById('video-status').style.display = 'block';
-        document.getElementById('process-video-btn').disabled = true;
-        
-        // Upload video - FIXED: Use full API URL
-        fetch(`${CONFIG.apiBaseUrl}/upload-video`, {  // Changed from '/upload-video' to use CONFIG.apiBaseUrl
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('Video uploaded successfully!', 'success');
-                currentVideo = data;
-                document.getElementById('process-video-btn').disabled = false;
-                updateVideoStatus('Video uploaded. Ready for processing.');
-            } else {
-                showNotification('Error uploading video: ' + data.error, 'error');
-                updateVideoStatus('Upload failed.');
-            }
-        })
-        .catch(error => {
-            console.error('Video upload error:', error);
-            showNotification('Error uploading video: ' + error.message, 'error');
-            updateVideoStatus('Upload failed.');
-        });
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('video/')) {
+        showNotification('Please select a valid video file', 'error');
+        return;
     }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Show loading state
+    const videoStatus = document.getElementById('video-status');
+    const processBtn = document.getElementById('process-video-btn');
+    
+    if (videoStatus) videoStatus.style.display = 'block';
+    if (processBtn) processBtn.disabled = true;
+    
+    // Upload video
+    fetch(`${CONFIG.apiBaseUrl}/upload-video`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification('Video uploaded successfully!', 'success');
+            currentVideo = data;
+            if (processBtn) processBtn.disabled = false;
+            updateVideoStatus('Video uploaded. Ready for processing.');
+        } else {
+            throw new Error(data.error || 'Upload failed');
+        }
+    })
+    .catch(error => {
+        console.error('Video upload error:', error);
+        showNotification('Error uploading video: ' + error.message, 'error');
+        updateVideoStatus('Upload failed.');
+        // Reset form
+        event.target.value = '';
+    });
 }
 
 // Process video button handler
@@ -1463,35 +1493,46 @@ function showOnMap(lat, lng) {
     }
 }
 
-// Video drag and drop functionality
+// REPLACE the existing drag and drop section with this:
 document.addEventListener('DOMContentLoaded', function() {
     const videoUploadArea = document.getElementById('videoUploadArea');
     const videoFileInput = document.getElementById('video-file-input');
 
-    // Only add event listeners if elements exist
     if (videoUploadArea && videoFileInput) {
         videoUploadArea.addEventListener('dragover', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             videoUploadArea.classList.add('drag-over');
         });
 
         videoUploadArea.addEventListener('dragleave', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             videoUploadArea.classList.remove('drag-over');
         });
 
         videoUploadArea.addEventListener('drop', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             videoUploadArea.classList.remove('drag-over');
             
             const files = e.dataTransfer.files;
             if (files.length > 0) {
+                // Create a new event object
+                const changeEvent = new Event('change', { bubbles: true });
                 videoFileInput.files = files;
-                videoFileInput.dispatchEvent(new Event('change'));
+                
+                // Manually call the upload handler
+                handleVideoUpload({ 
+                    target: videoFileInput, 
+                    preventDefault: () => {},
+                    files: files 
+                });
             }
         });
 
         videoUploadArea.addEventListener('click', function(e) {
+            e.preventDefault();
             if (e.target.tagName !== 'BUTTON') {
                 videoFileInput.click();
             }

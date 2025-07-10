@@ -295,45 +295,37 @@ async def get_data():
         "statistics": calculate_statistics(processed_data)
     }
 
-@app.get("/data/filtered")
-async def get_filtered_data(
+@app.get("/data/filter")
+async def filter_data(
     severity: Optional[str] = None,
-    min_chainage: Optional[float] = None,
-    max_chainage: Optional[float] = None,
-    road_name: Optional[str] = None
+    measurement_type: Optional[str] = None,
+    highway: Optional[str] = None
 ):
     """
-    Get filtered survey data based on parameters
+    Filter pavement data by various criteria
     """
-    global processed_data
-    if not processed_data:
-        return {"data": [], "total": 0}
-    
     filtered_data = processed_data.copy()
     
-    # Apply filters
-    if severity:
-        filtered_data = [item for item in filtered_data if item.get('severity') == severity]
+    if severity and severity.lower() != 'all':
+        filtered_data = [d for d in filtered_data if d['severity'] == severity]
     
-    if min_chainage is not None:
-        filtered_data = [item for item in filtered_data if item.get('chainage', 0) >= min_chainage]
+    if measurement_type and measurement_type.lower() != 'all':
+        filtered_data = [d for d in filtered_data if d['type'] == measurement_type]
     
-    if max_chainage is not None:
-        filtered_data = [item for item in filtered_data if item.get('chainage', 0) <= max_chainage]
+    if highway:
+        filtered_data = [d for d in filtered_data if highway.lower() in d['highway'].lower()]
     
-    if road_name:
-        filtered_data = [item for item in filtered_data if road_name.lower() in item.get('road_name', '').lower()]
+    stats = calculate_statistics(filtered_data)
     
     return {
         "data": filtered_data,
-        "total": len(filtered_data),
+        "statistics": stats,
+        "total_points": len(filtered_data),
         "filters_applied": {
             "severity": severity,
-            "min_chainage": min_chainage,
-            "max_chainage": max_chainage,
-            "road_name": road_name
-        },
-        "statistics": calculate_statistics(filtered_data)
+            "measurement_type": measurement_type,
+            "highway": highway
+        }
     }
 
 @app.get("/statistics")
@@ -391,7 +383,19 @@ def calculate_statistics(data):
     Calculate comprehensive statistics from survey data
     """
     if not data:
-        return {}
+        return {
+            "total": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0,
+            "by_type": {},
+            "by_highway": {},
+            "severity_distribution": {},
+            "chainage_statistics": {},
+            "road_distribution": {},
+            "distress_type_distribution": {},
+            "coordinates_available": 0
+        }
     
     # Basic counts
     total_points = len(data)
@@ -401,6 +405,11 @@ def calculate_statistics(data):
     for item in data:
         severity = item.get('severity', 'Unknown')
         severity_counts[severity] = severity_counts.get(severity, 0) + 1
+    
+    # Get counts for frontend compatibility
+    high = severity_counts.get('High', 0)
+    medium = severity_counts.get('Medium', 0)
+    low = severity_counts.get('Low', 0)
     
     # Chainage statistics
     chainages = [item.get('chainage', 0) for item in data if item.get('chainage') is not None]
@@ -425,7 +434,37 @@ def calculate_statistics(data):
         distress = item.get('distress_type', 'Unknown')
         distress_counts[distress] = distress_counts.get(distress, 0) + 1
     
+    # Statistics by type (for backward compatibility)
+    by_type = {}
+    for item in data:
+        measurement_type = item.get('distress_type', 'Unknown')
+        if measurement_type not in by_type:
+            by_type[measurement_type] = {'total': 0, 'high': 0, 'medium': 0, 'low': 0}
+        by_type[measurement_type]['total'] += 1
+        severity_lower = item.get('severity', 'Unknown').lower()
+        if severity_lower in by_type[measurement_type]:
+            by_type[measurement_type][severity_lower] += 1
+    
+    # Statistics by highway/road
+    by_highway = {}
+    for item in data:
+        highway = item.get('road_name', 'Unknown')
+        if highway not in by_highway:
+            by_highway[highway] = {'total': 0, 'high': 0, 'medium': 0, 'low': 0}
+        by_highway[highway]['total'] += 1
+        severity_lower = item.get('severity', 'Unknown').lower()
+        if severity_lower in by_highway[highway]:
+            by_highway[highway][severity_lower] += 1
+    
     return {
+        # Frontend compatibility fields
+        'total': total_points,
+        'high': high,
+        'medium': medium,
+        'low': low,
+        'by_type': by_type,
+        'by_highway': by_highway,
+        # Extended statistics
         'total_points': total_points,
         'severity_distribution': severity_counts,
         'chainage_statistics': chainage_stats,
@@ -433,6 +472,120 @@ def calculate_statistics(data):
         'distress_type_distribution': distress_counts,
         'coordinates_available': len([item for item in data if item.get('latitude') and item.get('longitude')])
     }
+
+@app.post("/sample-data")
+async def load_sample_data():
+    """
+    Load sample data for demonstration
+    """
+    global processed_data
+    
+    # Generate sample data
+    sample_data = generate_sample_data()
+    processed_data = sample_data
+    
+    stats = calculate_statistics(processed_data)
+    
+    return {
+        "success": True,
+        "message": "Sample data loaded successfully",
+        "data": processed_data,
+        "statistics": stats,
+        "total_points": len(processed_data)
+    }
+
+def generate_sample_data():
+    """
+    Generate sample pavement data for demonstration
+    """
+    import random
+    from datetime import datetime
+    
+    sample_data = []
+    highways = ['NH-1', 'NH-2', 'NH-8', 'NH-44', 'NH-48']
+    lanes = ['L1', 'L2', 'R1', 'R2']
+    measurement_types = ['Roughness', 'Rutting', 'Cracking', 'Ravelling']
+    
+    # Generate random points across India
+    for i in range(100):
+        lat = random.uniform(8.0, 35.0)  # India latitude range
+        lng = random.uniform(68.0, 97.0)  # India longitude range
+        
+        highway = random.choice(highways)
+        lane = random.choice(lanes)
+        measurement_type = random.choice(measurement_types)
+        
+        # Generate value based on measurement type
+        if measurement_type == 'Roughness':
+            value = random.uniform(800, 4000)
+            limit = 2400
+            unit = 'mm/km'
+        elif measurement_type == 'Rutting':
+            value = random.uniform(1, 15)
+            limit = 5
+            unit = 'mm'
+        elif measurement_type == 'Cracking':
+            value = random.uniform(0.5, 20)
+            limit = 5
+            unit = '% area'
+        else:  # Ravelling
+            value = random.uniform(0.1, 5)
+            limit = 1
+            unit = '% area'
+        
+        severity = determine_severity(measurement_type, value, limit)
+        
+        sample_data.append({
+            'id': i,
+            'latitude': lat,
+            'longitude': lng,
+            'road_name': highway,
+            'lane': lane,
+            'chainage': i * 100,
+            'distress_type': measurement_type,
+            'value': round(value, 2),
+            'unit': unit,
+            'severity': severity,
+            'limit': limit,
+            'datetime': datetime.now().isoformat()
+        })
+    
+    return sample_data
+
+@app.delete("/data")
+async def clear_data():
+    """
+    Clear all processed data
+    """
+    global processed_data
+    processed_data = []
+    return {"success": True, "message": "All data cleared successfully"}
+
+@app.get("/export")
+async def export_data():
+    """
+    Export processed data as CSV
+    """
+    if not processed_data:
+        raise HTTPException(status_code=400, detail="No data to export")
+    
+    try:
+        # Convert to DataFrame
+        df = pd.DataFrame(processed_data)
+        
+        # Convert to CSV
+        csv_buffer = io.StringIO()
+        df.to_csv(csv_buffer, index=False)
+        csv_content = csv_buffer.getvalue()
+        
+        return {
+            "success": True,
+            "csv_content": csv_content,
+            "filename": f"nhai_pavement_data_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        }
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error exporting data: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

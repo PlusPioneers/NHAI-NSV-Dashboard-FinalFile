@@ -278,10 +278,7 @@
         </div>
     </div>
 </div>
-            </div>
-        </div>
-
-        <!-- Severity List Section -->
+<!-- Severity List Section -->
         <div class="row mt-4">
     <div class="col-md-12">
         <div class="card">
@@ -318,6 +315,10 @@
     </div>
 </div>
 
+            </div>
+        </div>
+
+        
         <!-- Statistics Section -->
         <div class="row mt-4">
             <div class="col-md-12">
@@ -448,10 +449,10 @@
         // Update statistics display function
         function updateStatistics(stats) {
             // Update the main stat cards
-            document.getElementById('totalPoints').textContent = stats.total || 0;
-            document.getElementById('highSeverity').textContent = stats.high || 0;
-            document.getElementById('mediumSeverity').textContent = stats.medium || 0;
-            document.getElementById('lowSeverity').textContent = stats.low || 0;
+            document.getElementById('totalPoints').textContent = stats.total_points || 0;
+            document.getElementById('highSeverity').textContent = (stats.severity_distribution && stats.severity_distribution.High) || 0;
+            document.getElementById('mediumSeverity').textContent = (stats.severity_distribution && stats.severity_distribution.Medium) || 0;
+            document.getElementById('lowSeverity').textContent = (stats.severity_distribution && stats.severity_distribution.Low) || 0;
             
             // Update the detailed statistics section
             const statsContainer = document.getElementById('statistics');
