@@ -1,12 +1,12 @@
-/* NHAI NSV Dashboard Custom Styles */
 
-/* Base Styles */
+
+
 body {
     background-color: #f8f9fa;
     font-family: 'Arial', sans-serif;
 }
 
-/* Navigation Styles */
+
 .navbar {
     background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -17,7 +17,7 @@ body {
     color: white !important;
 }
 
-/* Card Styles */
+
 .card {
     border: none;
     border-radius: 15px;
@@ -36,14 +36,14 @@ body {
     font-weight: bold;
 }
 
-/* Map Styles */
+
 #map {
     height: 500px;
     border-radius: 15px;
     border: 2px solid #e9ecef;
 }
 
-/* Statistics Cards */
+
 .stats-card {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -68,7 +68,7 @@ body {
     opacity: 0.8;
 }
 
-/* Severity Colors */
+
 .severity-high { 
     color: #dc3545; 
 }
@@ -81,7 +81,7 @@ body {
     color: #28a745; 
 }
 
-/* Data Upload Section */
+
 .data-upload {
     border: 2px dashed #dee2e6;
     border-radius: 15px;
@@ -118,12 +118,12 @@ body {
     color: #667eea;
 }
 
-/* Loading Spinner */
+
 .loading-spinner {
     display: none;
 }
 
-/* Legend Styles */
+
 .legend {
     background: white;
     border-radius: 10px;
@@ -146,7 +146,7 @@ body {
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* Custom Popup Styles */
+
 .leaflet-popup-content-wrapper {
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
@@ -169,7 +169,7 @@ body {
     font-size: 0.9rem;
 }
 
-/* Responsive Design */
+
 @media (max-width: 768px) {
     .stats-card {
         margin-bottom: 15px;
@@ -210,7 +210,7 @@ body {
     }
 }
 
-/* Button Animations */
+
 .btn {
     transition: all 0.3s ease;
 }
@@ -220,7 +220,7 @@ body {
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
-/* Notification Styles */
+
 .alert {
     border-radius: 10px;
     border: none;
@@ -237,7 +237,7 @@ body {
     color: white;
 }
 
-/* Marker Cluster Styles */
+
 .marker-cluster {
     background: rgba(255, 255, 255, 0.9);
     border-radius: 50%;
@@ -246,7 +246,7 @@ body {
     border: 2px solid #667eea;
 }
 
-/* Loading Animation */
+
 @keyframes pulse {
     0% { transform: scale(1); }
     50% { transform: scale(1.05); }
@@ -257,7 +257,7 @@ body {
     animation: pulse 1s infinite;
 }
 
-/* Custom Scrollbar */
+
 ::-webkit-scrollbar {
     width: 8px;
 }
@@ -276,18 +276,18 @@ body {
     background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
 }
 
-/* Smooth Transitions */
+
 * {
     transition: all 0.3s ease;
 }
 
-/* Focus States */
+
 .btn:focus,
 .file-input:focus + .btn {
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
 }
 
-/* Accessibility Improvements */
+
 .sr-only {
     position: absolute;
     width: 1px;
@@ -300,7 +300,7 @@ body {
     border: 0;
 }
 
-/* Print Styles */
+
 @media print {
     .navbar,
     .data-upload,
@@ -445,13 +445,13 @@ body {
     cursor: not-allowed;
 }
 
-/* Severity Stats Styling */
+
 .severity-stats {
     font-size: 0.85rem;
     color: #6c757d;
 }
 
-/* Animation for new items */
+
 .severity-item.new-item {
     animation: fadeInUp 0.3s ease forwards;
     opacity: 0;
@@ -465,7 +465,7 @@ body {
     }
 }
 
-/* Loading state for load more button */
+
 .load-more-btn.loading {
     position: relative;
     color: transparent;
@@ -492,7 +492,7 @@ body {
     }
 }
 
-/* Custom scrollbar for severity list */
+
 .severity-list::-webkit-scrollbar {
     width: 6px;
 }
@@ -510,19 +510,19 @@ body {
     background: #a8a8a8;
 }
 
-/* Filter buttons styling */
+
 .btn-group .btn.active-filter {
     background-color: #007bff;
     border-color: #007bff;
     color: white;
 }
 
-/* Empty state styling */
+
 .severity-list .text-muted {
     color: #6c757d !important;
 }
 
-/* Responsive adjustments */
+
 @media (max-width: 768px) {
     .severity-list-container {
         max-height: 400px;
@@ -540,7 +540,7 @@ body {
         font-size: 0.8rem;
     }
 }
-/* Export Modal Styles */
+
 #exportModal .modal-dialog {
     max-width: 900px;
 }

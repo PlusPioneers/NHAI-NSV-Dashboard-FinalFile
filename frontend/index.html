@@ -5,21 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NHAI NSV Dashboard - Pavement Distress Monitoring</title>
     
-    <!-- Bootstrap CSS -->
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
 
-    <!-- Leaflet CSS -->
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
     
-    <!-- Font Awesome for icons -->
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <!-- Custom CSS -->
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Navigation -->
+    
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="#"><i class="fas fa-road"></i> NHAI NSV Dashboard</a>
@@ -29,10 +29,10 @@
         </div>
     </nav>
 
-    <!-- Notification Container -->
+    
     <div id="notification-container" class="position-fixed top-0 end-0 p-3" style="z-index: 9999;"></div>
 
-    <!-- Loading Spinner -->
+    
     <div id="loading-spinner" class="position-fixed top-50 start-50 translate-middle" style="z-index: 9999; display: none;">
         <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
@@ -41,7 +41,7 @@
     </div>
 
     <div class="container mt-4">
-        <!-- Statistics Cards -->
+        
         <div class="row mb-4">
             <div class="col-md-3">
                 <div class="stats-card">
@@ -70,7 +70,7 @@
         </div>
 
         <div class="row">
-            <!-- Data Upload Section -->
+            
             <div class="col-md-4 mb-4">
                 <div class="card">
                     <div class="card-header">
@@ -109,8 +109,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- VIDEO UPLOAD SECTION -->
-<!-- Add this section after the existing "Data Upload" card (around line 90) -->
+                
 <div class="card mt-3">
     <div class="card-header">
         <i class="fas fa-video"></i> Video Upload & Sync
@@ -145,7 +144,6 @@
     </div>
 </div>
 
-                <!-- Filters Section -->
                 <div class="card mt-3">
                     <div class="card-header">
                         <i class="fas fa-filter"></i> Filters
@@ -177,7 +175,7 @@
                     </div>
                 </div>
 
-                <!-- Legend -->
+                
                 <div class="card mt-3">
                     <div class="card-header">
                         <i class="fas fa-info-circle"></i> Legend
@@ -201,7 +199,6 @@
                 </div>
             </div>
 
-            <!-- Map Section -->
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-header">
@@ -216,8 +213,7 @@
                         <div id="map"></div>
                     </div>
                 </div>
-                <!-- VIDEO PLAYER SECTION -->
-<!-- Add this as a new column after the map section (around line 180) -->
+                
 <div class="col-md-12">
     <div class="card">
         <div class="card-header">
@@ -278,7 +274,7 @@
         </div>
     </div>
 </div>
-<!-- Severity List Section -->
+
         <div class="row mt-4">
     <div class="col-md-12">
         <div class="card">
@@ -319,7 +315,7 @@
         </div>
 
         
-        <!-- Statistics Section -->
+        
         <div class="row mt-4">
             <div class="col-md-12">
                 <div class="card">
@@ -336,8 +332,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- VIDEO SYNC RESULTS SECTION -->
-<!-- Add this as a new row after the severity list section (around line 280) -->
+                
 <div class="row mt-4" id="video-sync-section" style="display: none;">
     <div class="col-md-12">
         <div class="card">
@@ -390,7 +385,7 @@
                                 </tr>
                             </thead>
                             <tbody id="sync-results-table">
-                                <!-- Dynamic content will be inserted here -->
+                                
                             </tbody>
                         </table>
                     </div>
@@ -404,23 +399,23 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Leaflet JS -->
+    
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
     
-    <!-- PapaParse for CSV parsing -->
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     
-    <!-- SheetJS for Excel parsing -->
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-    <!-- Custom JavaScript -->
+    
     <script src="script.js"></script>
 
     <script>
-        // Additional helper functions for the frontend
+        
         function centerMapOnIndia() {
             if (map) {
                 map.setView([20.5937, 78.9629], 5);
@@ -428,13 +423,13 @@
         }
 
         function filterSeverityList(severity) {
-            // Update active button
+            
             document.querySelectorAll('[id^="filter"]').forEach(btn => {
                 btn.classList.remove('active');
             });
             document.getElementById('filter' + severity).classList.add('active');
             
-            // Filter the severity list items
+            
             const severityItems = document.querySelectorAll('.severity-section');
             severityItems.forEach(section => {
                 if (severity === 'All') {
@@ -446,15 +441,15 @@
             });
         }
 
-        // Update statistics display function
+        
         function updateStatistics(stats) {
-            // Update the main stat cards
+            
             document.getElementById('totalPoints').textContent = stats.total_points || 0;
             document.getElementById('highSeverity').textContent = (stats.severity_distribution && stats.severity_distribution.High) || 0;
             document.getElementById('mediumSeverity').textContent = (stats.severity_distribution && stats.severity_distribution.Medium) || 0;
             document.getElementById('lowSeverity').textContent = (stats.severity_distribution && stats.severity_distribution.Low) || 0;
             
-            // Update the detailed statistics section
+            
             const statsContainer = document.getElementById('statistics');
             if (statsContainer && stats.total > 0) {
                 statsContainer.innerHTML = `
@@ -518,12 +513,12 @@
             }
         }
 
-        // File drag and drop functionality
+        
         document.addEventListener('DOMContentLoaded', function() {
             const uploadArea = document.getElementById('uploadArea');
             const fileInput = document.getElementById('file-input');
 
-            // Drag and drop events
+            
             uploadArea.addEventListener('dragover', function(e) {
                 e.preventDefault();
                 uploadArea.classList.add('drag-over');
@@ -545,7 +540,7 @@
                 }
             });
 
-            // Click to upload
+            
             uploadArea.addEventListener('click', function(e) {
                 if (e.target.tagName !== 'BUTTON') {
                     fileInput.click();
@@ -553,7 +548,7 @@
             });
         });
     </script>
-    <!-- Export Filter Modal -->
+    
 <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -564,10 +559,10 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <!-- Filter Form -->
+                
                 <form id="exportFilterForm">
                     <div class="row">
-                        <!-- Severity Filter -->
+                        
                         <div class="col-md-6 mb-3">
                             <label for="export-severity-filter" class="form-label">Severity Level</label>
                             <select class="form-select" id="export-severity-filter" name="severity">
@@ -578,7 +573,7 @@
                             </select>
                         </div>
                         
-                        <!-- Type Filter -->
+                        
                         <div class="col-md-6 mb-3">
                             <label for="export-type-filter" class="form-label">Damage Type</label>
                             <select class="form-select" id="export-type-filter" name="type">
@@ -586,7 +581,7 @@
                             </select>
                         </div>
                         
-                        <!-- Highway Filter -->
+                        
                         <div class="col-md-6 mb-3">
                             <label for="export-highway-filter" class="form-label">Highway</label>
                             <select class="form-select" id="export-highway-filter" name="highway">
@@ -594,7 +589,7 @@
                             </select>
                         </div>
                         
-                        <!-- Limit Number of Records -->
+                        
                         <div class="col-md-6 mb-3">
                             <label for="export-limit" class="form-label">Number of Records</label>
                             <select class="form-select" id="export-limit" name="limit">
@@ -606,7 +601,7 @@
                             </select>
                         </div>
                         
-                        <!-- Column Selection -->
+                       
                         <div class="col-md-12 mb-3">
                             <label class="form-label">Select Columns to Export</label>
                             <div class="row">
@@ -681,7 +676,7 @@
                             </div>
                         </div>
                         
-                        <!-- Preview Section -->
+                        
                         <div class="col-md-12 mb-3">
                             <div class="card">
                                 <div class="card-header">

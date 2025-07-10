@@ -17,23 +17,23 @@ from models import VideoFile, video_store
 
 app = FastAPI(title="NHAI NSV Dashboard API", version="1.0.0")
 
-# Configure CORS
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your frontend URL
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Create uploads directory if it doesn't exist
+
 os.makedirs("uploads/videos", exist_ok=True)
 os.makedirs("uploads/data", exist_ok=True)
 
-# Mount static files for video streaming
+
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
-# Global variable to store processed data
+
 processed_data = []
 
 @app.get("/")
@@ -53,18 +53,18 @@ async def upload_files(files: List[UploadFile] = File(...)):
             if file.filename.lower().endswith(('.csv', '.xlsx', '.xls')):
                 content = await file.read()
                 
-                # Save file
+
                 file_path = f"uploads/data/{file.filename}"
                 async with aiofiles.open(file_path, 'wb') as f:
                     await f.write(content)
                 
-                # Process based on file type
+
                 if file.filename.lower().endswith('.csv'):
                     df = pd.read_csv(io.StringIO(content.decode('utf-8')), header=None)
                 else:
                     df = pd.read_excel(io.BytesIO(content), header=None)
                 
-                # Process the data
+
                 file_data = process_nhai_data(df)
                 processed_data.extend(file_data)
             else:
@@ -73,11 +73,11 @@ async def upload_files(files: List[UploadFile] = File(...)):
                     detail=f"Unsupported file format: {file.filename}"
                 )
         
-        # Add IDs to processed data for video mapping
+
         for i, item in enumerate(processed_data):
             item['id'] = i
         
-        # Generate statistics
+
         stats = calculate_statistics(processed_data)
         
         return {
@@ -97,24 +97,24 @@ async def upload_video(background_tasks: BackgroundTasks, file: UploadFile = Fil
     Upload video file and start background processing
     """
     try:
-        # Validate file type
+
         if not file.filename.lower().endswith(('.mp4', '.avi', '.mov', '.mkv')):
             raise HTTPException(status_code=400, detail="Unsupported video format")
         
-        # Generate unique filename
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"{timestamp}_{file.filename}"
         file_path = f"uploads/videos/{filename}"
         
-        # Save video file
+
         async with aiofiles.open(file_path, 'wb') as f:
             content = await file.read()
             await f.write(content)
         
-        # Get video info
+
         video_info = get_video_info(file_path)
         
-        # Create video record
+
         video = VideoFile.create(
             filename=filename,
             filepath=file_path,
@@ -123,10 +123,10 @@ async def upload_video(background_tasks: BackgroundTasks, file: UploadFile = Fil
             size_bytes=len(content)
         )
         
-        # Add to store
+
         video_id = video_store.add_video(video)
         
-        # Start background processing
+
         background_tasks.add_task(process_video_background, video_id, file_path)
         
         return {
@@ -144,20 +144,20 @@ async def process_video_background(video_id: str, video_path: str):
     Background task to process video and create mappings
     """
     try:
-        # Update status to processing
+
         video_store.update_video_status(video_id, "processing")
         
-        # Process video to extract GPS data
+
         result = await process_video_async(video_path, interval_seconds=1.0)
         
         if not result['success']:
             video_store.update_video_status(video_id, "failed", result['error'])
             return
         
-        # Store GPS points
+
         video_store.add_video_gps_points(video_id, result['gps_data'])
         
-        # Create mappings with survey data if available
+
         if processed_data:
             video_gps_data = result['gps_data']
             sync_result = create_video_data_sync(processed_data, video_gps_data)
@@ -165,7 +165,7 @@ async def process_video_background(video_id: str, video_path: str):
             if sync_result['success']:
                 video_store.add_mappings(video_id, sync_result['mappings'])
         
-        # Update status to completed
+
         video_store.update_video_status(video_id, "completed")
         
     except Exception as e:
@@ -243,28 +243,28 @@ async def sync_video_data(video_id: str):
     Manually sync video data with survey data
     """
     try:
-        # Get video info
+
         video = video_store.get_video(video_id)
         if not video:
             raise HTTPException(status_code=404, detail="Video not found")
         
-        # Get video GPS data
+
         video_gps_points = video_store.get_video_gps_points(video_id)
         if not video_gps_points:
             raise HTTPException(status_code=400, detail="No GPS data found for this video")
         
-        # Check if survey data is available
+
         if not processed_data:
             raise HTTPException(status_code=400, detail="No survey data available. Please upload survey data first.")
         
-        # Create sync mappings
+
         video_gps_data = [point.dict() for point in video_gps_points]
         sync_result = create_video_data_sync(processed_data, video_gps_data)
         
         if not sync_result['success']:
             raise HTTPException(status_code=400, detail=f"Sync failed: {sync_result['error']}")
         
-        # Clear existing mappings and add new ones
+
         video_store.clear_mappings(video_id)
         video_store.add_mappings(video_id, sync_result['mappings'])
         
@@ -349,11 +349,11 @@ async def delete_video(video_id: str):
         if not video:
             raise HTTPException(status_code=404, detail="Video not found")
         
-        # Delete physical file
+
         if os.path.exists(video.filepath):
             os.remove(video.filepath)
         
-        # Remove from store
+
         video_store.remove_video(video_id)
         
         return {
@@ -397,21 +397,21 @@ def calculate_statistics(data):
             "coordinates_available": 0
         }
     
-    # Basic counts
+
     total_points = len(data)
     
-    # Severity distribution
+
     severity_counts = {}
     for item in data:
         severity = item.get('severity', 'Unknown')
         severity_counts[severity] = severity_counts.get(severity, 0) + 1
     
-    # Get counts for frontend compatibility
+
     high = severity_counts.get('High', 0)
     medium = severity_counts.get('Medium', 0)
     low = severity_counts.get('Low', 0)
     
-    # Chainage statistics
+
     chainages = [item.get('chainage', 0) for item in data if item.get('chainage') is not None]
     chainage_stats = {}
     if chainages:
@@ -422,19 +422,19 @@ def calculate_statistics(data):
             'range': max(chainages) - min(chainages)
         }
     
-    # Road distribution
+
     road_counts = {}
     for item in data:
         road = item.get('road_name', 'Unknown')
         road_counts[road] = road_counts.get(road, 0) + 1
     
-    # Distress type distribution
+
     distress_counts = {}
     for item in data:
         distress = item.get('distress_type', 'Unknown')
         distress_counts[distress] = distress_counts.get(distress, 0) + 1
     
-    # Statistics by type (for backward compatibility)
+
     by_type = {}
     for item in data:
         measurement_type = item.get('distress_type', 'Unknown')
@@ -445,7 +445,7 @@ def calculate_statistics(data):
         if severity_lower in by_type[measurement_type]:
             by_type[measurement_type][severity_lower] += 1
     
-    # Statistics by highway/road
+
     by_highway = {}
     for item in data:
         highway = item.get('road_name', 'Unknown')
@@ -457,14 +457,14 @@ def calculate_statistics(data):
             by_highway[highway][severity_lower] += 1
     
     return {
-        # Frontend compatibility fields
+
         'total': total_points,
         'high': high,
         'medium': medium,
         'low': low,
         'by_type': by_type,
         'by_highway': by_highway,
-        # Extended statistics
+
         'total_points': total_points,
         'severity_distribution': severity_counts,
         'chainage_statistics': chainage_stats,
@@ -480,7 +480,7 @@ async def load_sample_data():
     """
     global processed_data
     
-    # Generate sample data
+
     sample_data = generate_sample_data()
     processed_data = sample_data
     
@@ -506,16 +506,16 @@ def generate_sample_data():
     lanes = ['L1', 'L2', 'R1', 'R2']
     measurement_types = ['Roughness', 'Rutting', 'Cracking', 'Ravelling']
     
-    # Generate random points across India
+
     for i in range(100):
-        lat = random.uniform(8.0, 35.0)  # India latitude range
-        lng = random.uniform(68.0, 97.0)  # India longitude range
+        lat = random.uniform(8.0, 35.0)  
+        lng = random.uniform(68.0, 97.0)  
         
         highway = random.choice(highways)
         lane = random.choice(lanes)
         measurement_type = random.choice(measurement_types)
         
-        # Generate value based on measurement type
+        
         if measurement_type == 'Roughness':
             value = random.uniform(800, 4000)
             limit = 2400
@@ -528,7 +528,7 @@ def generate_sample_data():
             value = random.uniform(0.5, 20)
             limit = 5
             unit = '% area'
-        else:  # Ravelling
+        else:  
             value = random.uniform(0.1, 5)
             limit = 1
             unit = '% area'
@@ -570,10 +570,10 @@ async def export_data():
         raise HTTPException(status_code=400, detail="No data to export")
     
     try:
-        # Convert to DataFrame
+        
         df = pd.DataFrame(processed_data)
         
-        # Convert to CSV
+        
         csv_buffer = io.StringIO()
         df.to_csv(csv_buffer, index=False)
         csv_content = csv_buffer.getvalue()

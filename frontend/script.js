@@ -1,12 +1,6 @@
-/**
- * NHAI NSV Dashboard JavaScript - Frontend Client
- * Communicates with FastAPI backend
- */
-
-// Configuration
 const CONFIG = {
     apiBaseUrl: 'http://localhost:8000',
-    mapCenter: [20.5937, 78.9629], // India center coordinates
+    mapCenter: [20.5937, 78.9629], 
     mapZoom: 5,
     severityColors: {
         'High': '#dc3545',
@@ -17,16 +11,14 @@ const CONFIG = {
     popupOffset: [0, -10]
 };
 
-// Global Variables
+
 let map;
 let markers = [];
 let pavementData = [];
-let originalStatistics = { total: 0, high: 0, medium: 0, low: 0 }; // Store original stats
+let originalStatistics = { total: 0, high: 0, medium: 0, low: 0 }; 
 let currentFilter = 'All';
 
-/**
- * Initialize the map
- */
+
 function initializeMap() {
     map = L.map('map').setView(CONFIG.mapCenter, CONFIG.mapZoom);
     
@@ -38,9 +30,7 @@ function initializeMap() {
     console.log('Map initialized successfully');
 }
 
-/**
- * API Communication Functions
- */
+
 async function uploadFiles(files) {
     const formData = new FormData();
     Array.from(files).forEach(file => {
@@ -144,7 +134,7 @@ async function exportData() {
         
         const result = await response.json();
         
-        // Create download link
+        
         const blob = new Blob([result.csv_content], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -159,21 +149,18 @@ async function exportData() {
         showNotification('Error exporting data', 'error');
     }
 }
-/**
- * Show export modal with filters
- */
+
+ 
 function showExportModal() {
-    // Populate dropdowns with current data
+    
     populateExportFilters();
     
-    // Show the modal
+    
     const exportModal = new bootstrap.Modal(document.getElementById('exportModal'));
     exportModal.show();
 }
 
-/**
- * Populate export filter dropdowns
- */
+
 function populateExportFilters() {
     if (!pavementData || pavementData.length === 0) {
         return;
@@ -182,14 +169,14 @@ function populateExportFilters() {
     const highways = [...new Set(pavementData.map(d => d.highway))];
     const types = [...new Set(pavementData.map(d => d.type))];
     
-    // Populate highway dropdown
+    
     const highwaySelect = document.getElementById('export-highway-filter');
     highwaySelect.innerHTML = '<option value="">All Highways</option>';
     highways.forEach(highway => {
         highwaySelect.innerHTML += `<option value="${highway}">${highway}</option>`;
     });
     
-    // Populate type dropdown
+    
     const typeSelect = document.getElementById('export-type-filter');
     typeSelect.innerHTML = '<option value="">All Types</option>';
     types.forEach(type => {
@@ -197,15 +184,13 @@ function populateExportFilters() {
     });
 }
 
-/**
- * Preview export data based on filters
- */
+
 function previewExportData() {
     const filters = getExportFilters();
     const columns = getSelectedColumns();
     const filteredData = applyExportFilters(pavementData, filters);
     
-    // Update preview
+    
     const previewDiv = document.getElementById('export-preview');
     if (filteredData.length === 0) {
         previewDiv.innerHTML = '<small class="text-warning">No data matches the selected filters</small>';
@@ -251,9 +236,7 @@ function previewExportData() {
     `;
 }
 
-/**
- * Get export filters from form
- */
+
 function getExportFilters() {
     return {
         severity: document.getElementById('export-severity-filter').value,
@@ -263,19 +246,15 @@ function getExportFilters() {
     };
 }
 
-/**
- * Get selected columns for export
- */
+
 function getSelectedColumns() {
     const checkboxes = document.querySelectorAll('#exportModal input[type="checkbox"]:checked');
     return Array.from(checkboxes).map(cb => cb.value);
 }
 
-/**
- * Apply filters to data
- */
+
 function applyExportFilters(data, filters) {
-    let filteredData = data.slice(); // Create a copy
+    let filteredData = data.slice(); 
     
     if (filters.severity) {
         filteredData = filteredData.filter(item => item.severity === filters.severity);
@@ -292,9 +271,7 @@ function applyExportFilters(data, filters) {
     return filteredData;
 }
 
-/**
- * Format export value for display
- */
+
 function formatExportValue(row, column) {
     if (column === 'googleMapsLink') {
         return `https://maps.google.com/?q=${row.lat},${row.lng}`;
@@ -302,9 +279,7 @@ function formatExportValue(row, column) {
     return row[column] || 'N/A';
 }
 
-/**
- * Export filtered data
- */
+
 async function exportFilteredData() {
     const filters = getExportFilters();
     const columns = getSelectedColumns();
@@ -322,10 +297,10 @@ async function exportFilteredData() {
             return;
         }
         
-        // Apply limit if specified
+        
         const limitedData = filters.limit ? filteredData.slice(0, parseInt(filters.limit)) : filteredData;
         
-        // Prepare data for export
+        
         const exportData = limitedData.map(row => {
             const exportRow = {};
             columns.forEach(col => {
@@ -338,16 +313,16 @@ async function exportFilteredData() {
             return exportRow;
         });
         
-        // Convert to CSV
+        
         const csvContent = convertToCSV(exportData);
         
-        // Create download
+      
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
         link.setAttribute('href', url);
         
-        // Generate filename
+        
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
         const filterSuffix = filters.severity ? `_${filters.severity}` : '';
         const filename = `nhai_pavement_data_filtered${filterSuffix}_${timestamp}.csv`;
@@ -358,7 +333,7 @@ async function exportFilteredData() {
         link.click();
         document.body.removeChild(link);
         
-        // Close modal and show success message
+        
         const exportModal = bootstrap.Modal.getInstance(document.getElementById('exportModal'));
         exportModal.hide();
         
@@ -370,9 +345,7 @@ async function exportFilteredData() {
     }
 }
 
-/**
- * Convert data to CSV format
- */
+
 function convertToCSV(data) {
     if (!data || data.length === 0) return '';
     
@@ -382,7 +355,7 @@ function convertToCSV(data) {
     data.forEach(row => {
         const values = headers.map(header => {
             const value = row[header];
-            // Escape quotes and wrap in quotes if contains comma
+            
             const escaped = String(value).replace(/"/g, '""');
             return escaped.includes(',') ? `"${escaped}"` : escaped;
         });
@@ -392,9 +365,7 @@ function convertToCSV(data) {
     return csvRows.join('\n');
 }
 
-/**
- * Map and UI Functions
- */
+
 function addMarkersToMap(data) {
     clearMarkers();
     
@@ -473,9 +444,7 @@ let currentDisplayedItems = 0;
 let itemsPerPage = 50;
 let currentSeverityFilter = 'All';
 
-/**
- * Generate severity list with pagination
- */
+
 function generateSeverityList(data) {
     currentSeverityData = data;
     currentDisplayedItems = 0;
@@ -487,7 +456,7 @@ function generateSeverityList(data) {
     
     if (!severityList) return;
     
-    // Clear existing content
+    
     severityList.innerHTML = '';
     
     if (data.length === 0) {
@@ -503,63 +472,61 @@ function generateSeverityList(data) {
         return;
     }
     
-    // Show initial items
+    
     loadMoreItems(true);
     
-    // Show/hide load more button and stats
+    
     updateLoadMoreButton();
     updateSeverityStats();
     severityStats.style.display = 'block';
 }
 
-/**
- * Load more items (50 at a time)
- */
+
 function loadMoreItems(isInitialLoad = false) {
     const severityList = document.getElementById('severity-list');
     const loadMoreBtn = document.getElementById('load-more-btn');
     
     if (!severityList || !currentSeverityData.length) return;
     
-    // Show loading state
+    
     if (!isInitialLoad) {
         loadMoreBtn.classList.add('loading');
         loadMoreBtn.disabled = true;
     }
     
-    // Filter data based on current filter
+    
     let filteredData = currentSeverityData;
     if (currentSeverityFilter !== 'All') {
         filteredData = currentSeverityData.filter(point => point.severity === currentSeverityFilter);
     }
     
-    // Calculate which items to show
+    
     const startIndex = currentDisplayedItems;
     const endIndex = Math.min(startIndex + itemsPerPage, filteredData.length);
     const itemsToShow = filteredData.slice(startIndex, endIndex);
     
-    // Group items by severity for display
+    
     const groupedItems = groupItemsBySeverity(itemsToShow);
     
-    // If this is initial load, clear the list first
+    
     if (isInitialLoad) {
         severityList.innerHTML = '';
     }
     
-    // Add new items to the display
+    
     setTimeout(() => {
         Object.entries(groupedItems).forEach(([severity, points]) => {
             addSeveritySection(severity, points, isInitialLoad);
         });
         
-        // Update displayed items count
+        
         currentDisplayedItems = endIndex;
         
-        // Update UI
+        
         updateLoadMoreButton();
         updateSeverityStats();
         
-        // Remove loading state
+        
         if (!isInitialLoad) {
             loadMoreBtn.classList.remove('loading');
             loadMoreBtn.disabled = false;
@@ -567,9 +534,7 @@ function loadMoreItems(isInitialLoad = false) {
     }, isInitialLoad ? 0 : 500);
 }
 
-/**
- * Group items by severity
- */
+
 function groupItemsBySeverity(items) {
     return items.reduce((acc, point) => {
         if (!acc[point.severity]) acc[point.severity] = [];
@@ -578,15 +543,13 @@ function groupItemsBySeverity(items) {
     }, {});
 }
 
-/**
- * Add or update severity section
- */
+
 function addSeveritySection(severity, points, isInitialLoad) {
     const severityList = document.getElementById('severity-list');
     let existingSection = severityList.querySelector(`[data-severity="${severity}"]`);
     
     if (!existingSection) {
-        // Create new section
+        
         const section = document.createElement('div');
         section.className = 'severity-section';
         section.setAttribute('data-severity', severity);
@@ -606,7 +569,7 @@ function addSeveritySection(severity, points, isInitialLoad) {
         existingSection = section;
     }
     
-    // Add items to the section
+    
     const itemsContainer = existingSection.querySelector(`[data-severity-items="${severity}"]`);
     const countElement = existingSection.querySelector(`[data-count="${severity}"]`);
     
@@ -635,14 +598,12 @@ function addSeveritySection(severity, points, isInitialLoad) {
         itemsContainer.appendChild(itemElement);
     });
     
-    // Update count
+    
     const currentCount = parseInt(countElement.textContent.replace(/[()]/g, '')) || 0;
     countElement.textContent = `(${currentCount + points.length})`;
 }
 
-/**
- * Update load more button visibility and text
- */
+
 function updateLoadMoreButton() {
     const loadMoreContainer = document.getElementById('load-more-container');
     const loadMoreBtn = document.getElementById('load-more-btn');
@@ -650,7 +611,7 @@ function updateLoadMoreButton() {
     
     if (!loadMoreContainer || !currentSeverityData.length) return;
     
-    // Filter data based on current filter
+    
     let filteredData = currentSeverityData;
     if (currentSeverityFilter !== 'All') {
         filteredData = currentSeverityData.filter(point => point.severity === currentSeverityFilter);
@@ -668,16 +629,14 @@ function updateLoadMoreButton() {
     }
 }
 
-/**
- * Update severity statistics display
- */
+
 function updateSeverityStats() {
     const showingCount = document.getElementById('showing-count');
     const totalCount = document.getElementById('total-count');
     
     if (!showingCount || !totalCount) return;
     
-    // Filter data based on current filter
+    
     let filteredData = currentSeverityData;
     if (currentSeverityFilter !== 'All') {
         filteredData = currentSeverityData.filter(point => point.severity === currentSeverityFilter);
@@ -687,20 +646,18 @@ function updateSeverityStats() {
     totalCount.textContent = filteredData.length;
 }
 
-/**
- * Updated filter severity list function with pagination support
- */
+
 function filterSeverityList(severity) {
     currentSeverityFilter = severity;
     currentDisplayedItems = 0;
     
-    // Update active button
+    
     document.querySelectorAll('[id^="filter"]').forEach(btn => {
         btn.classList.remove('active');
     });
     document.getElementById('filter' + severity).classList.add('active');
     
-    // Regenerate list with new filter
+    
     generateSeverityList(currentSeverityData);
 }
 
@@ -711,33 +668,33 @@ function highlightMarker(lat, lng) {
     );
     
     if (marker) {
-        // Calculate optimal zoom level based on current view
+        
         const currentZoom = map.getZoom();
         let targetZoom;
         
         if (currentZoom < 12) {
-            targetZoom = 16; // Zoom in significantly if currently far out
+            targetZoom = 16; 
         } else if (currentZoom < 15) {
-            targetZoom = 17; // Moderate zoom in
+            targetZoom = 17; 
         } else {
-            targetZoom = Math.min(18, currentZoom + 2); // Fine adjustment, max zoom 18
+            targetZoom = Math.min(18, currentZoom + 2); 
         }
         
-        // Smooth fly-to animation for better user experience
+        
         map.flyTo([lat, lng], targetZoom, {
             animate: true,
             duration: 1.2,
             easeLinearity: 0.1
         });
         
-        // Enhanced popup and highlight effects
+        
         setTimeout(() => {
-            // Store original marker properties
+            
             const originalRadius = marker.getRadius();
             const originalColor = marker.options.color;
             const originalWeight = marker.options.weight;
             
-            // Create pulsing highlight effect
+            
             let pulseCount = 0;
             const pulseInterval = setInterval(() => {
                 if (pulseCount % 2 === 0) {
@@ -755,9 +712,9 @@ function highlightMarker(lat, lng) {
                 }
                 
                 pulseCount++;
-                if (pulseCount >= 4) { // 2 complete pulses
+                if (pulseCount >= 4) { 
                     clearInterval(pulseInterval);
-                    // Ensure marker returns to original state
+                    
                     marker.setStyle({
                         color: originalColor,
                         weight: originalWeight,
@@ -766,16 +723,14 @@ function highlightMarker(lat, lng) {
                 }
             }, 300);
             
-            // Open popup after animation
+            
             marker.openPopup();
             
         }, 600);
     }
 }
 
-/**
- * UI Helper Functions
- */
+
 function showLoadingSpinner(show = true) {
     const spinner = document.getElementById('loading-spinner');
     if (spinner) {
@@ -794,17 +749,15 @@ function showNotification(message, type = 'info') {
     const container = document.getElementById('notification-container') || document.body;
     container.appendChild(notification);
     
-    // Auto-remove after 5 seconds
+    
     setTimeout(() => {
         notification.remove();
     }, 5000);
 }
 
-/**
- * Update the top statistics cards (these should NOT change when filters are applied)
- */
+
 function updateTopStatisticsCards(stats) {
-    // Store original statistics for future reference
+    
     originalStatistics = {
         total: stats.total || 0,
         high: stats.high || 0,
@@ -812,16 +765,14 @@ function updateTopStatisticsCards(stats) {
         low: stats.low || 0
     };
     
-    // Update the top cards with original/full statistics
+    
     document.getElementById('totalPoints').textContent = originalStatistics.total;
     document.getElementById('highSeverity').textContent = originalStatistics.high;
     document.getElementById('mediumSeverity').textContent = originalStatistics.medium;
     document.getElementById('lowSeverity').textContent = originalStatistics.low;
 }
 
-/**
- * Update the detailed statistics section (this can change with filters)
- */
+
 function updateDetailedStatistics(stats) {
     const statsContainer = document.getElementById('statistics');
     if (!statsContainer) return;
@@ -896,9 +847,7 @@ function updateDetailedStatistics(stats) {
     }
 }
 
-/**
- * Reset statistics cards to zero (when data is cleared)
- */
+
 function resetStatisticsCards() {
     originalStatistics = { total: 0, high: 0, medium: 0, low: 0 };
     document.getElementById('totalPoints').textContent = 0;
@@ -929,11 +878,9 @@ function updateFilterDropdowns(data) {
     }
 }
 
-/**
- * Event Handlers
- */
+
 function initializeEventHandlers() {
-    // File upload handler
+    
     const fileInput = document.getElementById('file-input');
     if (fileInput) {
         fileInput.addEventListener('change', async (e) => {
@@ -943,8 +890,8 @@ function initializeEventHandlers() {
                     const result = await uploadFiles(files);
                     pavementData = result.data;
                     addMarkersToMap(pavementData);
-                    updateTopStatisticsCards(result.statistics); // Update top cards
-                    updateDetailedStatistics(result.statistics); // Update detailed stats
+                    updateTopStatisticsCards(result.statistics); 
+                    updateDetailedStatistics(result.statistics); 
                     updateFilterDropdowns(pavementData);
                     showNotification(`Successfully uploaded ${files.length} file(s)`, 'success');
                 } catch (error) {
@@ -954,7 +901,7 @@ function initializeEventHandlers() {
         });
     }
     
-    // Sample data button
+    
     const sampleDataBtn = document.getElementById('sample-data-btn');
     if (sampleDataBtn) {
         sampleDataBtn.addEventListener('click', async () => {
@@ -962,8 +909,8 @@ function initializeEventHandlers() {
                 const result = await loadSampleData();
                 pavementData = result.data;
                 addMarkersToMap(pavementData);
-                updateTopStatisticsCards(result.statistics); // Update top cards
-                updateDetailedStatistics(result.statistics); // Update detailed stats
+                updateTopStatisticsCards(result.statistics); 
+                updateDetailedStatistics(result.statistics); 
                 updateFilterDropdowns(pavementData);
                 showNotification('Sample data loaded successfully', 'success');
             } catch (error) {
@@ -972,7 +919,7 @@ function initializeEventHandlers() {
         });
     }
     
-    // Clear data button
+  
     const clearDataBtn = document.getElementById('clear-data-btn');
     if (clearDataBtn) {
         clearDataBtn.addEventListener('click', async () => {
@@ -981,8 +928,8 @@ function initializeEventHandlers() {
                     await clearAllData();
                     pavementData = [];
                     clearMarkers();
-                    resetStatisticsCards(); // Reset top cards to zero
-                    updateDetailedStatistics({ total: 0, high: 0, medium: 0, low: 0 }); // Reset detailed stats
+                    resetStatisticsCards(); 
+                    updateDetailedStatistics({ total: 0, high: 0, medium: 0, low: 0 }); 
                     showNotification('All data cleared successfully', 'success');
                 } catch (error) {
                     showNotification(`Failed to clear data: ${error.message}`, 'error');
@@ -990,7 +937,7 @@ function initializeEventHandlers() {
             }
         });
     }
-    // Updated Export data button handler
+
     const exportDataBtn = document.getElementById('export-data-btn');
     if (exportDataBtn) {
         exportDataBtn.addEventListener('click', () => {
@@ -1002,7 +949,7 @@ function initializeEventHandlers() {
         });
     }
     
-    // Filter handlers
+    
     const severityFilter = document.getElementById('severity-filter');
     const typeFilter = document.getElementById('type-filter');
     const highwayFilter = document.getElementById('highway-filter');
@@ -1015,8 +962,8 @@ function initializeEventHandlers() {
         try {
             const result = await filterData(severity, type, highway);
             addMarkersToMap(result.data);
-            // DON'T update top statistics cards - they should remain unchanged
-            updateDetailedStatistics(result.statistics); // Only update detailed stats
+            
+            updateDetailedStatistics(result.statistics); 
             showNotification(`Filter applied: ${result.total_points} points shown`, 'info');
         } catch (error) {
             showNotification(`Filter failed: ${error.message}`, 'error');
@@ -1027,7 +974,7 @@ function initializeEventHandlers() {
     typeFilter?.addEventListener('change', applyFilters);
     highwayFilter?.addEventListener('change', applyFilters);
     
-    // Refresh data button
+    
     const refreshDataBtn = document.getElementById('refresh-data-btn');
     if (refreshDataBtn) {
         refreshDataBtn.addEventListener('click', async () => {
@@ -1035,8 +982,8 @@ function initializeEventHandlers() {
                 const result = await fetchData();
                 pavementData = result.data;
                 addMarkersToMap(pavementData);
-                updateTopStatisticsCards(result.statistics); // Update top cards
-                updateDetailedStatistics(result.statistics); // Update detailed stats
+                updateTopStatisticsCards(result.statistics);
+                updateDetailedStatistics(result.statistics); 
                 updateFilterDropdowns(pavementData);
                 showNotification('Data refreshed successfully', 'success');
             } catch (error) {
@@ -1044,7 +991,7 @@ function initializeEventHandlers() {
             }
         });
     }
-    // Export modal event handlers
+    
     const previewExportBtn = document.getElementById('preview-export-btn');
     if (previewExportBtn) {
         previewExportBtn.addEventListener('click', previewExportData);
@@ -1055,7 +1002,7 @@ function initializeEventHandlers() {
         confirmExportBtn.addEventListener('click', exportFilteredData);
     }
     
-    // Auto-preview when filters change
+    
     const exportFilters = ['export-severity-filter', 'export-type-filter', 'export-highway-filter', 'export-limit'];
     exportFilters.forEach(filterId => {
         const filterElement = document.getElementById(filterId);
@@ -1064,7 +1011,7 @@ function initializeEventHandlers() {
         }
     });
     
-    // Auto-preview when columns change
+    
     const exportModal = document.getElementById('exportModal');
     if (exportModal) {
         exportModal.addEventListener('change', (e) => {
@@ -1074,7 +1021,7 @@ function initializeEventHandlers() {
         });
     }
     document.addEventListener('submit', function(e) {
-    // Check if it's a video upload form
+    
     if (e.target.closest('#videoUploadArea') || 
         e.target.querySelector('#video-file-input')) {
         e.preventDefault();
@@ -1083,9 +1030,7 @@ function initializeEventHandlers() {
 });
 }
 
-/**
- * Initialize the application
- */
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('NHAI NSV Dashboard initializing...');
     
@@ -1093,13 +1038,13 @@ document.addEventListener('DOMContentLoaded', () => {
         initializeMap();
         initializeEventHandlers();
         
-        // Load initial data if available
+        
         fetchData().then(result => {
             if (result.data.length > 0) {
                 pavementData = result.data;
                 addMarkersToMap(pavementData);
-                updateTopStatisticsCards(result.statistics); // Update top cards
-                updateDetailedStatistics(result.statistics); // Update detailed stats
+                updateTopStatisticsCards(result.statistics); 
+                updateDetailedStatistics(result.statistics); 
                 updateFilterDropdowns(pavementData);
             }
         }).catch(error => {
@@ -1113,9 +1058,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-/**
- * Utility Functions
- */
+
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -1139,26 +1082,26 @@ function getSeverityClass(severity) {
     return `severity-${severity.toLowerCase()}`;
 }
 
-// Error handler for uncaught errors
+
 window.addEventListener('error', (event) => {
     console.error('Uncaught error:', event.error);
     showNotification('An unexpected error occurred', 'error');
 });
 
-// Handle API connection errors
+
 window.addEventListener('unhandledrejection', (event) => {
     console.error('Unhandled promise rejection:', event.reason);
     if (event.reason.message && event.reason.message.includes('fetch')) {
         showNotification('Unable to connect to server. Please check if the backend is running.', 'error');
     }
 });
-// Video upload functionality - FIXED VERSION
+
 let currentVideo = null;
 let videoSyncData = [];
 let currentSyncIndex = 0;
 let autoNavigateEnabled = true;
 
-// Video upload functionality
+
 const videoFileInput = document.getElementById('video-file-input');
 if (videoFileInput) {
     videoFileInput.addEventListener('change', function(event) {
@@ -1167,15 +1110,15 @@ if (videoFileInput) {
     });
 }
 
-// REPLACE the existing handleVideoUpload function (around line 1020) with this:
+
 function handleVideoUpload(event) {
-    // CRITICAL: Prevent form submission and page refresh
+    
     event.preventDefault();
     
     const file = event.target.files[0];
     if (!file) return;
     
-    // Validate file type
+    
     if (!file.type.startsWith('video/')) {
         showNotification('Please select a valid video file', 'error');
         return;
@@ -1184,14 +1127,14 @@ function handleVideoUpload(event) {
     const formData = new FormData();
     formData.append('file', file);
     
-    // Show loading state
+    
     const videoStatus = document.getElementById('video-status');
     const processBtn = document.getElementById('process-video-btn');
     
     if (videoStatus) videoStatus.style.display = 'block';
     if (processBtn) processBtn.disabled = true;
     
-    // Upload video
+    
     fetch(`${CONFIG.apiBaseUrl}/upload-video`, {
         method: 'POST',
         body: formData
@@ -1216,12 +1159,12 @@ function handleVideoUpload(event) {
         console.error('Video upload error:', error);
         showNotification('Error uploading video: ' + error.message, 'error');
         updateVideoStatus('Upload failed.');
-        // Reset form
+       
         event.target.value = '';
     });
 }
 
-// Process video button handler
+
 const processVideoBtn = document.getElementById('process-video-btn');
 if (processVideoBtn) {
     processVideoBtn.addEventListener('click', processVideo);
@@ -1233,12 +1176,12 @@ function processVideo() {
     updateVideoStatus('Processing video for GPS extraction...');
     document.getElementById('process-video-btn').disabled = true;
     
-    // Video processing happens in background, check status
+    
     checkVideoProcessingStatus(currentVideo.video_id);
 }
 
 function checkVideoProcessingStatus(videoId) {
-    fetch(`${CONFIG.apiBaseUrl}/videos/${videoId}`)  // FIXED: Use full API URL
+    fetch(`${CONFIG.apiBaseUrl}/videos/${videoId}`)  
         .then(response => response.json())
         .then(data => {
             if (data.status === 'completed') {
@@ -1248,7 +1191,7 @@ function checkVideoProcessingStatus(videoId) {
             } else if (data.status === 'failed') {
                 updateVideoStatus('Video processing failed: ' + data.error);
             } else {
-                // Still processing, check again in 2 seconds
+                
                 setTimeout(() => checkVideoProcessingStatus(videoId), 2000);
             }
         })
@@ -1258,7 +1201,7 @@ function checkVideoProcessingStatus(videoId) {
         });
 }
 
-// Sync video with data
+
 const syncVideoBtn = document.getElementById('sync-video-btn');
 if (syncVideoBtn) {
     syncVideoBtn.addEventListener('click', syncVideoWithData);
@@ -1269,7 +1212,7 @@ function syncVideoWithData() {
     
     updateVideoStatus('Syncing video with survey data...');
     
-    fetch(`${CONFIG.apiBaseUrl}/sync-video-data?video_id=${currentVideo.video_id}`, {  // FIXED: Use full API URL
+    fetch(`${CONFIG.apiBaseUrl}/sync-video-data?video_id=${currentVideo.video_id}`, {  
         method: 'POST'
     })
     .then(response => response.json())
@@ -1295,21 +1238,21 @@ function loadVideoForPlayback(videoData) {
     const videoElement = document.getElementById('survey-video');
     const placeholder = document.getElementById('video-placeholder');
     
-    // Set video source - FIXED: Use full API URL for video files
+    
     videoElement.src = `${CONFIG.apiBaseUrl}/uploads/videos/${videoData.filename}`;
     
-    // Show video, hide placeholder
+    
     videoElement.style.display = 'block';
     placeholder.style.display = 'none';
     
-    // Show video info
+    
     document.getElementById('video-info').style.display = 'block';
     document.getElementById('video-duration').textContent = formatTime(videoData.duration);
     
-    // Enable controls
+    
     document.getElementById('video-controls-btn').disabled = false;
     
-    // Add video event listeners
+    
     videoElement.addEventListener('timeupdate', updateVideoTime);
     videoElement.addEventListener('loadedmetadata', function() {
         document.getElementById('video-navigation').style.display = 'block';
@@ -1317,7 +1260,7 @@ function loadVideoForPlayback(videoData) {
 }
 
 function loadVideoSyncResults(videoId) {
-    fetch(`${CONFIG.apiBaseUrl}/videos/${videoId}/mappings`)  // FIXED: Use full API URL
+    fetch(`${CONFIG.apiBaseUrl}/videos/${videoId}/mappings`)  
         .then(response => response.json())
         .then(data => {
             videoSyncData = data.mappings;
@@ -1376,7 +1319,7 @@ function displaySyncResults() {
     });
 }
 
-// Video navigation functions
+
 function jumpToVideoTime(timestamp) {
     const videoElement = document.getElementById('survey-video');
     if (videoElement) {
@@ -1396,7 +1339,7 @@ function formatTime(seconds) {
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-// Previous/Next point navigation
+
 const prevPointBtn = document.getElementById('prev-point-btn');
 if (prevPointBtn) {
     prevPointBtn.addEventListener('click', function() {
@@ -1427,7 +1370,7 @@ function jumpToSyncPoint(index) {
     }
 }
 
-// Video controls modal
+
 const videoControlsBtn = document.getElementById('video-controls-btn');
 if (videoControlsBtn) {
     videoControlsBtn.addEventListener('click', function() {
@@ -1435,30 +1378,30 @@ if (videoControlsBtn) {
     });
 }
 
-// Apply video settings
+
 const applyVideoSettingsBtn = document.getElementById('apply-video-settings');
 if (applyVideoSettingsBtn) {
     applyVideoSettingsBtn.addEventListener('click', function() {
         const speed = document.getElementById('playback-speed').value;
         const autoNav = document.getElementById('auto-navigate').checked;
         
-        // Apply playback speed
+
         const videoElement = document.getElementById('survey-video');
         if (videoElement) {
             videoElement.playbackRate = parseFloat(speed);
         }
         
-        // Update auto navigation setting
+
         autoNavigateEnabled = autoNav;
         
-        // Close modal
+
         bootstrap.Modal.getInstance(document.getElementById('videoControlsModal')).hide();
         
         showNotification('Video settings applied!', 'success');
     });
 }
 
-// Update tolerance value display
+
 const syncToleranceInput = document.getElementById('sync-tolerance');
 if (syncToleranceInput) {
     syncToleranceInput.addEventListener('input', function() {
@@ -1469,7 +1412,7 @@ if (syncToleranceInput) {
     });
 }
 
-// Helper functions
+
 function updateVideoStatus(message) {
     const statusElement = document.getElementById('video-status');
     statusElement.innerHTML = `<div class="alert alert-info"><i class="fas fa-info-circle"></i> ${message}</div>`;
@@ -1487,13 +1430,13 @@ function getSeverityColor(severity) {
 function showOnMap(lat, lng) {
     if (map) {
         map.setView([lat, lng], 16);
-        // Add a temporary marker or highlight
+
         const marker = L.marker([lat, lng]).addTo(map);
         setTimeout(() => map.removeLayer(marker), 3000);
     }
 }
 
-// REPLACE the existing drag and drop section with this:
+
 document.addEventListener('DOMContentLoaded', function() {
     const videoUploadArea = document.getElementById('videoUploadArea');
     const videoFileInput = document.getElementById('video-file-input');
@@ -1518,11 +1461,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const files = e.dataTransfer.files;
             if (files.length > 0) {
-                // Create a new event object
+                
                 const changeEvent = new Event('change', { bubbles: true });
                 videoFileInput.files = files;
                 
-                // Manually call the upload handler
+                
                 handleVideoUpload({ 
                     target: videoFileInput, 
                     preventDefault: () => {},
